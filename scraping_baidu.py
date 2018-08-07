@@ -64,6 +64,7 @@ class baidu_search():
                 self.scraping_html(html, i + 1)
                 self.iter_count += 1
                 fn.writelines("读取第 " + str(self.iter_count) + " 页\n")
+        fn.write("抓取完毕！\n")
         fn.close()
 
     def scraping_html(self, html, ID):
