@@ -1,7 +1,6 @@
 # -*- coding:utf-8 -*-
 import requests
 from bs4 import BeautifulSoup
-from pyquery import PyQuery
 import pymongo
 import time
 
