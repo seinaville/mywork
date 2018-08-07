@@ -10,8 +10,9 @@ import pymongo
 class baidu_search():
     # 爬取baidu搜索的结果
     # kw: keyword
-    # pn: page number
-    # fn: file to store the search result
+    # mpn: maximun of the pages number to search
+    kw = None
+    mpn = None
     __url = 'http://www.baidu.com/s?wd={}&pn={}'
     __headers = {
         'Accept':
@@ -24,25 +25,33 @@ class baidu_search():
         'User-Agent': 'Mozilla / 5.0 (Macintosh; Intel Mac OS X 10_13_6) AppleWebKit / 537.36 (KHTML, like Gecko) Chrome / 68.0.3440.84 Safari / 537.36'
     }
 
-    def __init__(self, kw, pn):
+    def __init__(self, kw, mpn):
         # 初始化变量
         self.kw = kw  # keyword to search
-        self.pn = pn
-        # building url to search
-        self.__url = self.__url.format(self.kw, self.pn)
-        # 初始化网页
+        self.mpn = mpn
+       # 初始化网页
         try:
-            self.__response = requests.get(self.__url, headers=self.__headers)
-            self.__response.raise_for_status()  # 抛出异常
-            self.__html = BeautifulSoup(self.__response.text, "lxml")
             # 建立mongodblian连接
             self.__db = pymongo.MongoClient('127.0.0.1', 27017)
-            self.__db__table = self.__db.search_baidu  # 在mongodb中建立名为search_baidu数据库
+            self.__db_table = self.__db.search_baidu  # 在mongodb中建立名为search_baidu数据库
             # 建立一个collection 用于保存搜索结果
-            self.__collection = self.__db__table['results']
+            self.__collection = self.__db_table['results']
         except Exception:
             import traceback
             traceback.print_exc()
+
+    def scraping(self):
+        for i in range(self.mpn - 1)
+        # building url to search
+        url = self.__url.format(self.kw, i + 1)
+        try:
+            response = requests.get(url, headers = self.__headers)
+            response.raise_for_status() # 抛出异常
+            html = BeautifulSoup(response.text, 'lxml')
+
+
+
+
 
     def scraping_html(self):
         results = []
