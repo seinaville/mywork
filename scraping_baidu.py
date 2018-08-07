@@ -43,8 +43,7 @@ class baidu_search():
 
     def scraping(self):
         maxpage = self.mpn
-        fn = open(
-            '/Users/likai/Documents/Learningbydoing/python/webscraping/log.txt', "+w")
+        fn = open('log.txt', "+w")
         fn.write("用于读取百度搜索结果\n")
         for i in range(maxpage):
             # building url to search
