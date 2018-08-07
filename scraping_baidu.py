@@ -3,6 +3,7 @@ import requests
 from bs4 import BeautifulSoup
 from pyquery import PyQuery
 import pymongo
+import time
 
 # 定义爬虫类
 
@@ -13,6 +14,7 @@ class baidu_search():
     # mpn: maximun of the pages number to search
     kw = None
     mpn = None
+    iter_count = 0
     __url = 'http://www.baidu.com/s?wd={}&pn={}'
     __headers = {
         'Accept':
@@ -41,23 +43,32 @@ class baidu_search():
             traceback.print_exc()
 
     def scraping(self):
-        for i in range(self.mpn - 1)
-        # building url to search
-        url = self.__url.format(self.kw, i + 1)
-        try:
-            response = requests.get(url, headers = self.__headers)
-            response.raise_for_status() # 抛出异常
-            html = BeautifulSoup(response.text, 'lxml')
+        maxpage = self.mpn
+        fn = open(
+            '/Users/likai/Documents/Learningbydoing/python/webscraping/log.txt', "+w")
+        fn.write("用于读取百度搜索结果\n")
+        for i in range(maxpage):
+            # building url to search
+            url = self.__url.format(self.kw, i + 1)
+            try:
+                response = requests.get(url, headers=self.__headers)
+                response.raise_for_status()  # 抛出异常
+            except Exception:
+                import traceback
+                traceback.print_exc()
+                fn.writelines(traceback.print_exc)
+                break
+            else:
+                html = BeautifulSoup(response.text, 'lxml')
+                time.sleep(1)
+                self.scraping_html(html, i + 1)
+                self.iter_count += 1
+                fn.writelines("读取第 " + str(self.iter_count) + " 页\n")
+        fn.close()
 
-
-
-
-
-    def scraping_html(self):
-        results = []
+    def scraping_html(self, html, ID):
         # 寻找内容
-        # doc = self.__html.find_all("div", class_='c-container')
-        div_container = self.__html.select('div.c-container')
+        div_container = html.select('div.c-container')
         for element in div_container:
             node = element.select("h3 a")  # 寻找title和href所在节点
             title = node[0].get_text()
@@ -69,15 +80,12 @@ class baidu_search():
             else:
                 abstract = None
             # 保存结果
-            results.append({
-                'title': str(title),
-                'href': str(href),
-                'abstract': str(abstract)
-            })
-       # print(results)
-        # save results into mongodb
-        # self.__collection.insert_many(results)
-        self.__collection.update_many
+            results = {'title': str(title),
+                       'href': str(href),
+                       'abstract': str(abstract)
+                       }
+            self.__collection.update(
+                {'_id': ID}, {'$set': results}, upsert=True)
 
     def print_querying(self):
         for x in self.__collection.find():
@@ -86,6 +94,6 @@ class baidu_search():
 
 
 if __name__ == '__main__':
-    test = baidu_search('分享经济企业', 1)
-    test.scraping_html()
+    test = baidu_search('分享经济企业', 10)
+    test.scraping()
     test.print_querying()
