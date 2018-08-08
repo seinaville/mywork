@@ -93,6 +93,5 @@ class baidu_search():
 
 
 if __name__ == '__main__':
-    test = baidu_search('分享经济企业', 10)
+    test = baidu_search('分享经济 分享企业 分享公司', 500)
     test.scraping()
-    test.print_querying()
