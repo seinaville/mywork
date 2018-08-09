@@ -1,7 +1,6 @@
 # -*- coding:utf-8 -*-
 import requests
 from bs4 import BeautifulSoup
-from pyquery import PyQuery
 import pymongo
 import time
 import random
@@ -16,6 +15,7 @@ class baidu_search():
     kw = None
     mpn = None
     iter_count = 0
+    __deldatabase = True
     __url = 'http://www.baidu.com/s?wd={}&pn={}'
     __headers = {
         'Accept':
@@ -28,10 +28,11 @@ class baidu_search():
         'User-Agent': 'Mozilla / 5.0 (Macintosh; Intel Mac OS X 10_13_6) AppleWebKit / 537.36 (KHTML, like Gecko) Chrome / 68.0.3440.84 Safari / 537.36'
     }
 
-    def __init__(self, kw, mpn):
+    def __init__(self, kw, mpn,deldb = True):
         # 初始化变量
         self.kw = kw  # keyword to search
         self.mpn = mpn
+        self.__deldatabase = deldb
        # 初始化网页
         try:
             # 建立mongodblian连接
@@ -39,10 +40,14 @@ class baidu_search():
             self.__db_table = self.__db.search_baidu  # 在mongodb中建立名为search_baidu数据库
             # 建立一个collection 用于保存搜索结果
             self.__collection = self.__db_table['results']
-            self.__collection.delete_many({})
+            if self.__deldatabase:
+                self.__collection.delete_many({})
         except Exception:
             import traceback
             traceback.print_exc()
+            fn = open('error.txt','+w')
+            fn.write('error:MongoClient error!\n')
+            fn.close()
 
     def scraping(self):
         maxpage = self.mpn
@@ -51,6 +56,7 @@ class baidu_search():
         for i in range(maxpage):
             # building url to search
             url = self.__url.format(self.kw, i + 1)
+            print(url)
             try:
                 response = requests.get(url, headers=self.__headers)
                 response.raise_for_status()  # 抛出异常
@@ -87,7 +93,7 @@ class baidu_search():
                        'href': str(href),
                        'abstract': str(abstract)
                        }
-            self.__collection.update(
+            self.__collection.update_one(
                 {'_id': ID}, {'$set': results}, upsert=True)
 
     def print_querying(self):
@@ -97,6 +103,8 @@ class baidu_search():
 
 
 if __name__ == '__main__':
-    test = baidu_search('分享经济企业 分享公司 分享企业', 3)
+    kw = 'title:(分享经济) “分享?企业”+“分享?模式”'
+    kw = '分享经济'
+    test = baidu_search(kw, 2)
     test.scraping()
     test.print_querying()
