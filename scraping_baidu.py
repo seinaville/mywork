@@ -124,8 +124,6 @@ class BaiduSearch():
 
 
 if __name__ == '__main__':
-    #kw = 'title:(分享经济) “分享?企业”+“分享?模式”'
-    kw = '分享经济'
-    test = BaiduSearch(kw, 1)
+    kw = 'title:(分享经济) “分享?企业”+“分享?模式”'
+    test = BaiduSearch(kw, 1000)
     test.scraping()
-    test.print_querying()
