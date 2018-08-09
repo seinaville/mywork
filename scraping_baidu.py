@@ -4,6 +4,7 @@ from bs4 import BeautifulSoup
 from pyquery import PyQuery
 import pymongo
 import time
+import random
 
 # 定义爬虫类
 
@@ -38,14 +39,14 @@ class baidu_search():
             self.__db_table = self.__db.search_baidu  # 在mongodb中建立名为search_baidu数据库
             # 建立一个collection 用于保存搜索结果
             self.__collection = self.__db_table['results']
+            self.__collection.delete_many({})
         except Exception:
             import traceback
             traceback.print_exc()
 
     def scraping(self):
         maxpage = self.mpn
-        fn = open(
-            '/Users/likai/Documents/Learningbydoing/python/webscraping/log.txt', "+w")
+        fn = open('log.txt', "+w")
         fn.write("用于读取百度搜索结果\n")
         for i in range(maxpage):
             # building url to search
@@ -60,10 +61,11 @@ class baidu_search():
                 break
             else:
                 html = BeautifulSoup(response.text, 'lxml')
-                time.sleep(1)
+                time.sleep(random.random() * 3)
                 self.scraping_html(html, i + 1)
                 self.iter_count += 1
                 fn.writelines("读取第 " + str(self.iter_count) + " 页\n")
+                print("读取第 " + str(self.iter_count) + " 页\n")
         fn.write("抓取完毕！\n")
         fn.close()
 
@@ -95,6 +97,6 @@ class baidu_search():
 
 
 if __name__ == '__main__':
-    test = baidu_search('分享经济企业', 10)
+    test = baidu_search('分享经济企业 分享公司 分享企业', 3)
     test.scraping()
     test.print_querying()
