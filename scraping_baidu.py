@@ -55,6 +55,7 @@ class baidu_search():
         for i in range(maxpage):
             # building url to search
             url = self.__url.format(self.kw, i + 1)
+            print(url)
             try:
                 response = requests.get(url, headers=self.__headers)
                 response.raise_for_status()  # 抛出异常
@@ -100,7 +101,8 @@ class baidu_search():
 
 
 if __name__ == '__main__':
-    kw = 'title:"分享经济"+“分享?企业”+“分享?模式”'
-    test = baidu_search(kw, 1)
+    kw = 'title:(分享经济) “分享?企业”+“分享?模式”'
+    kw = '分享经济'
+    test = baidu_search(kw, 2)
     test.scraping()
     test.print_querying()
