@@ -1,6 +1,6 @@
 # -- encoding:utf-8 --
 
-import request
+import requests
 from bs4 import BeautifulSoup
 import pymongo
 import datetime
@@ -14,21 +14,26 @@ class ScrapingWeb():
         Returns:
             将网页中的正文存入mongodb中
     '''
-    db_to_get = None
+    __db_to_get = None
 
-    def __ini__(self, **kwargs):
+    def __init__(self, **kwargs):
+        time_now = datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S')
+        fn = open('error.txt', 'w+')
         try:
-            if kwargs.has_key('connection'):
-                self.db_to_get = pymongo.MongoClient(host=kwargs['connection'])
+            if kwargs.__contains__('connection'):
+                self.__db_to_get = pymongo.MongoClient(
+                    host=kwargs['connection'])
             else:
-                self.db_to_get = pymongo.MongoClient(
-                        host=['localhost'],port=27017)
-        except pymongo.errors.ConnectionFailure as e:
-            with open('error.txt', 'w+') as fn:
-                time_now = datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S')
-                fn.write(
-                        '''数据库: 连接错误！\n 
-                           连接时间: %s \n''' % (str(time_now)))
-                fn.close()
+                self.__db_to_get = pymongo.MongoClient(host=['localhost'],
+                                                       port=27017)
+        except pymongo.errors.ConnectionFailure:
+            fn.write('数据库: 连接错误！\n 连接时间: %s \n' % (str(time_now)))
+            print('Server not available!')
+        else:
+            fn.write('数据库连接成功!\n 连接时间: %s \n' % (str(time_now)))
+            print('Mongo connection is successful!')
 
 
+if __name__ == '__main__':
+    connection = 'www.plusenplus.cn:27021'
+    test = ScrapingWeb(connection=connection)
