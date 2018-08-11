@@ -1,5 +1,10 @@
 # -- encoding:utf-8 --
 
+'''
+todo:
+    由于mongo远程链接有时间限制，需要予以解决
+'''
+
 import requests
 from bs4 import BeautifulSoup
 import pymongo
@@ -17,7 +22,6 @@ class ScrapingWeb():
     '''
     __db_to_get = None  # mongo 数据库
     __url = []   # 保存url地址，为列表对象
-    __fn = None  # 用于记录程序运行过程
     __header = {
         'Accept':
         'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
@@ -32,7 +36,6 @@ class ScrapingWeb():
         time_now = datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S')
         if os.path.isfile('info.txt'):
             os.remove('info.txt')
-        self.__fn = open('info.txt', 'a+')
         # 建立数据库连接
         try:
             if kwargs.__contains__('connection'):
@@ -42,15 +45,13 @@ class ScrapingWeb():
                 self.__db_to_get = pymongo.MongoClient(host=['localhost'],
                                                        port=27017)
         except pymongo.errors.ConnectionFailure:
-            self.__fn.write('数据库: 连接错误！\n 连接时间: %s \n' % (str(time_now)))
+            self.__output_message('数据库: 连接错误！\n 连接时间: %s \n' % (str(time_now)))
             print('Server not available!')
         else:
-            self.__fn.write('数据库连接成功!\n 连接时间: %s \n' % (str(time_now)))
+            self.__output_message('数据库连接成功!\n 连接时间: %s \n' % (str(time_now)))
             print('Mongo connection is successful!')
             doc = self.__db_to_get['search_baidu'].results.find({})
             self.__get_url(doc)
-        finally:
-            self.__fn.close()
 
     def Scraping_url(self):
         count = 0  # 计数器
@@ -59,25 +60,36 @@ class ScrapingWeb():
                 html = requests.get(
                     url, headers=self.__header, timeout=3)  # 请求网页，3秒内响应
             except requests.exceptions.RequestException:
-                self.__fn.write(''''网页: %s 请求异常\n
-                                网页响应状况: %d \n''' % (url, html.status_code))
+                self.__output_message('网页: %s 请求异常\n网页响应状况: %d \n'
+                                      % (url, html.status_code))
             else:
                 # 读取网页内所有的节点<P>
+                count += 1
                 doc = BeautifulSoup(html.text, 'lxml').select('p')
                 text = ''  # 初始化正文存储器
                 for tag in doc:  # 合并正文
                     text = '%s ，%s' % (text, tag.get_text())
-                print('\n' + text)
-            finally:
-                self.__fn.close()
+                self.__db_to_get['search_baidu'].mainbodytext.update_one(
+                    {'_id': url},
+                    {'$set': {'text': text}},
+                    upsert=True)
+        time_now = datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S')
+        self.__output_message('文字提取处理完毕: \n'
+                              '\t共计处理: %d 页 \n'
+                              '\t结果保存在"mainbodytext"集合.'
+                              '程序结束时间: %s'% (count, str(time_now)))
 
     def __get_url(self, documents):
         # 从documents中提取url地址
         for doc in documents:
             self.__url.append(doc['href'])
         self.__url = list(set(self.__url))  # 去掉重复的url
-        self.__fn.write('读取数据库中的href：共计 %d' % (len(self.__url)))
-        self.__fn.close()
+        self.__output_message('读取数据库中的href：共计 %d \n' % (len(self.__url)))
+
+    def __output_message(self, message):
+        with open('info.txt', 'a+') as fn:
+            fn.write(message)
+            fn.close()
 
 
 if __name__ == '__main__':
