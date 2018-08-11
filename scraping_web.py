@@ -55,10 +55,10 @@ class ScrapingWeb():
 
     def Scraping_url(self):
         count = 0  # 计数器
-        for url in self.__url[:2]:  # 读取网页地址
+        for url in self.__url[:100]:  # 读取网页地址
             try:
                 html = requests.get(
-                    url, headers=self.__header, timeout=3)  # 请求网页，3秒内响应
+                    url, headers=self.__header, timeout=10)  # 请求网页，3秒内响应
             except requests.exceptions.RequestException:
                 self.__output_message('网页: %s 请求异常\n网页响应状况: %d \n'
                                       % (url, html.status_code))
