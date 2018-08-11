@@ -58,10 +58,16 @@ class ScrapingWeb():
         for url in self.__url[:100]:  # 读取网页地址
             try:
                 html = requests.get(
-                    url, headers=self.__header, timeout=10)  # 请求网页，3秒内响应
+                    url, headers=self.__header,
+                    timeout=10, allow_redirects=True)  # 请求网页，3秒内响应
+                html.raise_for_status()
             except requests.exceptions.RequestException:
                 self.__output_message('网页: %s 请求异常\n网页响应状况: %d \n'
                                       % (url, html.status_code))
+                print('=====================================\n')
+                print('网页: %s 请求异常\n网页响应状况: %d \n' % (url,
+                                                      html.status_code))
+                print(html.text)
             else:
                 # 读取网页内所有的节点<P>
                 count += 1
@@ -77,7 +83,7 @@ class ScrapingWeb():
         self.__output_message('文字提取处理完毕: \n'
                               '\t共计处理: %d 页 \n'
                               '\t结果保存在"mainbodytext"集合.'
-                              '程序结束时间: %s'% (count, str(time_now)))
+                              '程序结束时间: %s' % (count, str(time_now)))
 
     def __get_url(self, documents):
         # 从documents中提取url地址
