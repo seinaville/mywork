@@ -59,19 +59,16 @@ class ScrapingWeb():
             try:
                 html = requests.get(
                     url, headers=self.__header,
-                    timeout=10, allow_redirects=True)  # 请求网页，3秒内响应
+                    timeout=10, allow_redirects=True)  # 请求网页，10秒内响应
                 html.raise_for_status()
                 # 对网页编码进行检测
                 encode = chardet.detect(html.content)['encoding']
                 if 'GB' in encode:
                     html.encoding = 'GBK'
-                    print(html.text)
             except requests.exceptions.RequestException:
-                self.__output_message('网页: %s 请求异常\n网页响应状况: %d \n'
+                self.__output_message('网页: %s 请求异常\n'
+                                      '网页响应状况: %d \n'
                                       % (url, html.status_code))
-                print('=====================================\n')
-                print('网页: %s 请求异常\n网页响应状况: %d \n' % (url,
-                                                      html.status_code))
             else:
                 # 读取网页内所有的节点<P>
                 count += 1
@@ -87,7 +84,7 @@ class ScrapingWeb():
         self.__output_message('文字提取处理完毕: \n'
                               '\t共计处理: %d 页 \n'
                               '\t结果保存在"mainbodytext"集合.'
-                              '程序结束时间: %s' % (count, str(time_now)))
+                              '程序结束时间: %s \n' % (count, str(time_now)))
 
     def __get_url(self, documents):
         # 从documents中提取url地址
