@@ -10,7 +10,7 @@ from bs4 import BeautifulSoup
 import pymongo
 import datetime
 import os
-
+import chardet
 
 class ScrapingWeb():
     ''' 根据scraping_baidu的结果，提取网页中的全部正文。
@@ -61,13 +61,17 @@ class ScrapingWeb():
                     url, headers=self.__header,
                     timeout=10, allow_redirects=True)  # 请求网页，3秒内响应
                 html.raise_for_status()
+                # 对网页编码进行检测
+                encode = chardet.detect(html.content)['encoding']
+                if 'GB' in encode:
+                    html.encoding = 'GBK'
+                    print(html.text)
             except requests.exceptions.RequestException:
                 self.__output_message('网页: %s 请求异常\n网页响应状况: %d \n'
                                       % (url, html.status_code))
                 print('=====================================\n')
                 print('网页: %s 请求异常\n网页响应状况: %d \n' % (url,
                                                       html.status_code))
-                print(html.text)
             else:
                 # 读取网页内所有的节点<P>
                 count += 1
