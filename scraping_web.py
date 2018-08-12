@@ -85,7 +85,7 @@ class ScrapingWeb():
         time_now = datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S')
         self.__output_message('文字提取处理完毕: \n'
                               '\t共计处理: %d 页 \n'
-                              '\t结果保存在"mainbodytext"集合.'
+                              '\t结果保存在"mainbodytext"集合.\n'
                               '程序结束时间: %s \n' % (count, str(time_now)))
 
     def __get_url(self, documents):
