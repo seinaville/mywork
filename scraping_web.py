@@ -65,6 +65,8 @@ class ScrapingWeb():
                 encode = chardet.detect(html.content)['encoding']
                 if 'GB' in encode:
                     html.encoding = 'GBK'
+                else:
+                    html.encoding = 'utf-8'  # 防止默认编码 ISO-8859-1
             except requests.exceptions.RequestException:
                 self.__output_message('网页: %s 请求异常\n'
                                       '网页响应状况: %d \n'
