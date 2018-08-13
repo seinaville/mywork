@@ -54,27 +54,27 @@ class ScrapingWeb():
 
     def Scraping_url(self):
         count = 0  # 计数器
-        for url in self.__url:  # 读取网页地址
+        for url in self.__url[:10]:  # 读取网页地址
             try:
                 html = requests.get(
                     url, headers=self.__header,
                     timeout=10, allow_redirects=True)  # 请求网页，10秒内响应
                 html.raise_for_status()
+            except requests.exceptions.RequestException:
+                self.__output_message('网页: %s 请求异常\n'
+                                      '网页响应状况: %d \n'
+                                      % (url, html.status_code))
+            else:
                 # 对网页编码进行检测
                 encode = chardet.detect(html.content)['encoding']
                 if 'GB' in encode:
                     html.encoding = 'GBK'
                 else:
                     html.encoding = 'utf-8'  # 防止默认编码 ISO-8859-1
-            except requests.exceptions.RequestException:
-                self.__output_message('网页: %s 请求异常\n'
-                                      '网页响应状况: %d \n'
-                                      % (url, html.status_code))
-            else:
-                # 保存全部网页
+               # 保存全部网页
                 count += 1
                 self.__db_to_get['search_baidu'].html.update_one(
-                    {'_id': url},
+                    {'_id': html.url},
                     {'$set': {'text': html.text}},
                     upsert=True)
         time_now = datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S')
