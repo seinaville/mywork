@@ -11,6 +11,7 @@ import datetime
 import os
 import chardet
 
+
 class ScrapingWeb():
     ''' 根据scraping_baidu的结果，提取网页中的全部正文。
         Args:
@@ -54,7 +55,7 @@ class ScrapingWeb():
 
     def Scraping_url(self):
         count = 0  # 计数器
-        for url in self.__url:  # 读取网页地址
+        for url in self.__url[:1]:  # 读取网页地址
             try:
                 html = requests.get(
                     url, headers=self.__header,
@@ -72,11 +73,11 @@ class ScrapingWeb():
                 else:
                     html.encoding = 'utf-8'  # 防止默认编码 ISO-8859-1
                # 保存全部网页
-               title = BeautifulSoup(html.text, 'lxml').title
+                doc = BeautifulSoup(html.text, 'lxml')
                 count += 1
                 self.__db_to_get['search_baidu'].html.update_one(
                     {'_id': count},
-                    {'$set': {'title':title,
+                    {'$set': {'title': doc.title.get_text(),
                               'text': html.text,
                               'url': html.url
                               }
