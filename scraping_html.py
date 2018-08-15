@@ -55,7 +55,7 @@ class ScrapingWeb():
 
     def Scraping_url(self):
         count = 0  # 计数器
-        for url in self.__url[:1]:  # 读取网页地址
+        for url in self.__url:  # 读取网页地址
             try:
                 html = requests.get(
                     url, headers=self.__header,
