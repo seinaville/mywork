@@ -15,16 +15,28 @@ sys.path.append('/Users/likai/Documents/Learningbydoing/python/webscraping/')
 
 # 定义logging
 logger = loggingconfig.logger
-
+DBUG = 0
 
 class Extractorhtml():
     __docs = None
     mainbody = []
 
     def __init__(self, **kwargs):
-        docs = self.__read_mongo()
-        logger.info('初始化完成.')
+        if kwargs.get('file') is not None:
+            logger.info('读取：%s', file)
+            with open(kwargs['file'], 'r') as fn:
+                self.__docs = json.load(fn)
+            logger.info('文件读入成功')
+        else:
+            try:
+                logger.info('读取mongo数据库')
+                docs = self.__read_mongo()
+            except Exception:
+                logger.error('数据读入错误', exc_info=True)
+            else:
+                logger.info('数据库读入正确')
         self.extract_html()
+        self.__save_to_json()
 
     def __read_mongo(self):
         try:
@@ -38,10 +50,13 @@ class Extractorhtml():
         return docs
 
     def extract_html(self):
-        logger.debug(type(self.__docs))
-        for doc in self.__docs[:1]:
-            self.mainbody.append(self.extract_main_body_text(doc['text']))
-            logger.debug('提取成功')
+        if DBUG:
+            logger.debug(type(self.__docs))
+        for doc in self.__docs:
+            mainbody = self.extract_main_body_text(doc['text'])
+            if len(mainbody) != 0 :
+                self.mainbody.append(mainbody)
+        logger.info('所有documents提取成功')
 
     def extract_main_body_text(self, doc, threshold=50):
         threshold = threshold
@@ -49,7 +64,7 @@ class Extractorhtml():
         # 清除页面中的评论、javascript和style
         comments = soup.find_all(text=lambda text:
                                  isinstance(text, Comment))
-        [Comment.extract() for Comment in comments]
+        [comment.extract() for comment in comments]
         [script.extract() for script in soup.find_all('script')]
         [style.extract() for style in soup.find_all('style')]
         # 将网页中的tag全部替换为''
@@ -60,24 +75,33 @@ class Extractorhtml():
             starindex = 0  # 正文开始的行数
             endindex = 0  # 正文结束的行数
             maxindex = lstolen.index(max(lstolen))
-            logger.debug('在第%d行存在最大的行字数：%d', maxindex + 1,
+            if DBUG:
+                logger.debug('在第%d行存在最大的行字数：%d', maxindex + 1,
                          max(lstolen))
             for i, v in enumerate(lstolen[:maxindex - 3]):
-                if v > threshold and lstolen[i + 1] > 5 and lstolen[i + 3] > 5:
+                if (v > threshold and lstolen[i + 1] > 10 and
+                        lstolen[i + 2] > 10 and lstolen[i + 3] > 10):
                     startindex = i
-                break
-            for i, v in enumerate(lstolen[maxindex:]):
+                    break
+            for i, v in enumerate(lstolen[maxindex:len(lstolen) - 3]):
                 if v < threshold and lstolen[maxindex + i + 1] < 10 and lstolen[maxindex + i + 2] < 10 and lstolen[maxindex + i + 3] < 10:
                     endindex = i
-                break
+                    break
         except Exception:
             logger.error('提取开始或结束行错误', exc_info=True)
         else:
-            mainbody = [x.strip() for x in ls[starindex:endindex + 1] if
+            mainbody = [x for x in ls[starindex:endindex + 1] if
                         len(x.strip()) > 0]
-
+            if DBUG:
+                logger.debug('mainbody\'s length is : %d', len(mainbody))
         return mainbody
+
+    def __save_to_json(self):
+        with open('data.json', 'w+') as fn:
+            json.dump(self.mainbody, fn)
+        logger.info('json文件写入成功')
 
 
 if __name__ == '__main__':
-    test = Extractorhtml()
+    file = '/Users/likai/Documents/我的大论文/DataAnalysis/database/html_json.txt'
+    test = Extractorhtml(file=file)
