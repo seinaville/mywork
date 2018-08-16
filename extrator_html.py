@@ -7,6 +7,7 @@ from bs4 import BeautifulSoup, Comment
 import json
 import re
 import sys
+import traceback
 import logging
 import loggingconfig
 
@@ -54,47 +55,30 @@ class Extractorhtml():
             logger.debug(type(self.__docs))
         for doc in self.__docs:
             mainbody = self.extract_main_body_text(doc['text'])
-            if len(mainbody) != 0 :
+            if mainbody:
                 self.mainbody.append(mainbody)
         logger.info('所有documents提取成功')
 
-    def extract_main_body_text(self, doc, threshold=50):
-        threshold = threshold
-        soup = BeautifulSoup(doc, 'lxml')
-        # 清除页面中的评论、javascript和style
-        comments = soup.find_all(text=lambda text:
-                                 isinstance(text, Comment))
-        [comment.extract() for comment in comments]
-        [script.extract() for script in soup.find_all('script')]
-        [style.extract() for style in soup.find_all('style')]
-        # 将网页中的tag全部替换为''
-        regsub = re.compile("<[^*>]*>")
-        ls = regsub.sub('', soup.prettify()).split('\n')
+    def extract_main_body_text(self, doc):
+        info = dict()
+        article = []
         try:
-            lstolen = [len(x) for x in ls]  # 计算每行字符长度
-            starindex = 0  # 正文开始的行数
-            endindex = 0  # 正文结束的行数
-            maxindex = lstolen.index(max(lstolen))
-            if DBUG:
-                logger.debug('在第%d行存在最大的行字数：%d', maxindex + 1,
-                         max(lstolen))
-            for i, v in enumerate(lstolen[:maxindex - 3]):
-                if (v > threshold and lstolen[i + 1] > 10 and
-                        lstolen[i + 2] > 10 and lstolen[i + 3] > 10):
-                    startindex = i
-                    break
-            for i, v in enumerate(lstolen[maxindex:len(lstolen) - 3]):
-                if v < threshold and lstolen[maxindex + i + 1] < 10 and lstolen[maxindex + i + 2] < 10 and lstolen[maxindex + i + 3] < 10:
-                    endindex = i
-                    break
+            soup = BeautifulSoup(doc, 'lxml')
+            if soup.title is not None:
+                info['title'] = soup.title.get_text(strip=True)
+            tag_p = soup.find_all('p')
+            if tag_p:
+                for p in tag_p:
+                    article.append(p.get_text(strip=True))
+                info.update(article=article.copy())
         except Exception:
-            logger.error('提取开始或结束行错误', exc_info=True)
-        else:
-            mainbody = [x for x in ls[starindex:endindex + 1] if
-                        len(x.strip()) > 0]
             if DBUG:
-                logger.debug('mainbody\'s length is : %d', len(mainbody))
-        return mainbody
+                logger.debug(traceback.format_exc)
+        else:
+            if info:
+                return info.copy()
+            else:
+                return None
 
     def __save_to_json(self):
         with open('data.json', 'w+') as fn:
