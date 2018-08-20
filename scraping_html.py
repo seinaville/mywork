@@ -10,6 +10,7 @@ import pymongo
 import datetime
 import os
 import chardet
+import re
 
 
 class ScrapingWeb():
@@ -50,7 +51,7 @@ class ScrapingWeb():
         else:
             self.__output_message('数据库连接成功!\n 连接时间: %s \n' % (str(time_now)))
             print('Mongo connection is successful!')
-            doc = self.__db_to_get['search_baidu'].results.find({})
+            doc = self.__db_to_get['search_baidu'].search_url.find({})
             self.__get_url(doc)
 
     def Scraping_url(self):
@@ -80,12 +81,12 @@ class ScrapingWeb():
                     fn.write('%d \n' % count)
                 try:
                     self.__db_to_get['search_baidu'].html.update_one(
-                    {'_id': count},
-                    {'$set': {'title': doc.title.get_text(),
-                              'text': html.text,
-                              'url': html.url
-                              }
-                    },upsert=True)
+                        {'_id': count},
+                        {'$set': {'title': doc.title.get_text(),
+                                  'text': html.text,
+                                  'url': html.url
+                                  }
+                         }, upsert=True)
                 except Exception:
                     self.__output_message('mongo 写入有问题\n')
 
@@ -96,8 +97,13 @@ class ScrapingWeb():
                               '程序结束时间: %s \n' % (count, str(time_now)))
 
     def __get_url(self, documents):
+        reg = re.compile(r'(百度|美篇|京东)+')
+        count = 0
         # 从documents中提取url地址
         for doc in documents:
+            if reg.search(doc['title']):
+                count += 1
+                continue
             self.__url.append(doc['href'])
         self.__url = list(set(self.__url))  # 去掉重复的url
         self.__output_message('读取数据库中的href：共计 %d \n' % (len(self.__url)))
