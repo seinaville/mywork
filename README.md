@@ -7,3 +7,6 @@ Problem: the url adress of baidu search
 
 # 修改 scraping_html.py
 添加 filter_ulr函数，删除百度、京东此类网页
+=======
+#添加了函数extractor_html和loggingconfig.py
+
