@@ -50,7 +50,7 @@ class BaiduSearch():
             self.__db = pymongo.MongoClient('127.0.0.1', 27017)
             self.__db_table = self.__db.search_baidu  # 在mongodb中建立名为search_baidu数据库
             # 建立一个collection 用于保存搜索结果
-            self.__collection = self.__db_table['results']
+            self.__collection = self.__db_table['search_url']
             if self.__deldatabase:  # 判断是否删除旧的数据
                 self.__collection.delete_many({})
         except Exception:
@@ -73,7 +73,6 @@ class BaiduSearch():
                 response.raise_for_status()  # 抛出异常
             except Exception:
                 import traceback
-                traceback.print_exc()
                 fn.writelines(traceback.print_exc)
             else:
                 html = BeautifulSoup(response.text, 'lxml')  # 解析网页
@@ -101,7 +100,6 @@ class BaiduSearch():
             """ 判断abstract节点是否存在。如果存在予以计入，否则记录为None """
             if len(node_abstract) == 1:
                 abstract = node_abstract[0].get_text(strip=True)
-                print(abstract)
             else:
                 abstract = None
             # 保存结果
@@ -124,6 +122,6 @@ class BaiduSearch():
 
 
 if __name__ == '__main__':
-    kw = 'title:(分享经济) “分享?企业”+“分享?模式”'
-    test = BaiduSearch(kw, 1000)
+    kw = 'title:(分享经济)'
+    test = BaiduSearch(kw, 10000)
     test.scraping()

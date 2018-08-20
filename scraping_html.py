@@ -64,7 +64,7 @@ class ScrapingWeb():
             except requests.exceptions.RequestException:
                 self.__output_message('网页: %s 请求异常\n'
                                       '网页响应状况: %d \n'
-                                      % (url, html.status_code))
+                                      % (html.url, html.status_code))
             else:
                 # 对网页编码进行检测
                 encode = chardet.detect(html.content)['encoding']
@@ -75,13 +75,20 @@ class ScrapingWeb():
                # 保存全部网页
                 doc = BeautifulSoup(html.text, 'lxml')
                 count += 1
-                self.__db_to_get['search_baidu'].html.update_one(
+
+                with open('coutn.txt', 'w') as fn:
+                    fn.write('%d \n' % count)
+                try:
+                    self.__db_to_get['search_baidu'].html.update_one(
                     {'_id': count},
                     {'$set': {'title': doc.title.get_text(),
                               'text': html.text,
                               'url': html.url
                               }
                     },upsert=True)
+                except Exception:
+                    self.__output_message('mongo 写入有问题\n')
+
         time_now = datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S')
         self.__output_message('文字提取处理完毕: \n'
                               '\t共计处理: %d 页 \n'
